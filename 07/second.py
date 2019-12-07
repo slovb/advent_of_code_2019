@@ -7,27 +7,32 @@ class Program:
         self.halted = False
         self.awaitingInput = False
 
-    def op(self): return self.memory[self.pc] % 10**2
+    def op(self):
+        return self.memory[self.pc] % 10**2
 
-    def op_mode(self, p): return (self.memory[self.pc] // 10**(p + 1)) % 10
+    def op_mode(self, p):
+        return (self.memory[self.pc] // 10**(p + 1)) % 10
 
     def param(self, offset, mode):
         if mode == 0:
             return self.memory[self.memory[self.pc + offset]]
         return self.memory[self.pc + offset]
 
-    def p_modal(self, p): return self.param(p, self.op_mode(p))
-    def p_position(self, p): return self.param(p, 0)
-    def p_immediate(self, p): return self.param(p, 1)
+    def p_modal(self, p):
+        return self.param(p, self.op_mode(p))
+
+    def p_position(self, p):
+        return self.param(p, 0)
+
+    def p_immediate(self, p):
+        return self.param(p, 1)
 
     def add(self):
-        self.memory[self.p_immediate(3)] = \
-            self.p_modal(1) + self.p_modal(2)
+        self.memory[self.p_immediate(3)] = self.p_modal(1) + self.p_modal(2)
         self.pc += 4
 
     def mul(self):
-        self.memory[self.p_immediate(3)] = \
-            self.p_modal(1) * self.p_modal(2)
+        self.memory[self.p_immediate(3)] = self.p_modal(1) * self.p_modal(2)
         self.pc += 4
 
     def read(self):
