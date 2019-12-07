@@ -7,75 +7,64 @@ class Program:
         self.halted = False
         self.awaitingInput = False
 
+    def op(self): return self.memory[self.pc] % 10**2
+
+    def op_mode(self, p): return (self.memory[self.pc] // 10**(p + 1)) % 10
+
     def param(self, offset, mode):
         if mode == 0:
             return self.memory[self.memory[self.pc + offset]]
         return self.memory[self.pc + offset]
 
-    def param1(self, op): return self.param(1, op[1])
-    def param1Immediate(self): return self.param(1, 1)
-    def param1Position(self): return self.param(1, 0)
+    def p_modal(self, p): return self.param(p, self.op_mode(p))
+    def p_position(self, p): return self.param(p, 0)
+    def p_immediate(self, p): return self.param(p, 1)
 
-    def param2(self, op): return self.param(2, op[2])
-    def param2Immediate(self): return self.param(2, 1)
-    def param2Position(self): return self.param(2, 0)
-
-    def param3(self, op): return self.param(3, op[3])
-    def param3Immediate(self): return self.param(3, 1)
-    def param3Position(self): return self.param(3, 0)
-
-    def operation(self):
-        op = self.memory[self.pc] % 10**2
-        c = (self.memory[self.pc] // 10**2) % 10
-        b = (self.memory[self.pc] // 10**3) % 10
-        a = (self.memory[self.pc] // 10**4) % 10
-        return (op, c, b, a)
-
-    def op_add(self, op):
-        self.memory[self.param3Immediate()] = \
-            self.param1(op) + self.param2(op)
+    def add(self):
+        self.memory[self.p_immediate(3)] = \
+            self.p_modal(1) + self.p_modal(2)
         self.pc += 4
 
-    def op_mul(self, op):
-        self.memory[self.param3Immediate()] = \
-            self.param1(op) * self.param2(op)
+    def mul(self):
+        self.memory[self.p_immediate(3)] = \
+            self.p_modal(1) * self.p_modal(2)
         self.pc += 4
 
-    def op_input(self, op):
+    def read(self):
         if len(self.input) == 0:
             self.awaitingInput = True
             return
-        self.memory[self.param1Immediate()] = self.input.pop(0)
+        self.memory[self.p_immediate(1)] = self.input.pop(0)
         self.pc += 2
 
-    def op_output(self, op):
-        self.output.append(self.param1Position())
+    def write(self):
+        self.output.append(self.p_position(1))
         self.pc += 2
 
-    def op_jump_if_true(self, op):
-        if self.param1(op) != 0:
-            self.pc = self.param2(op)
+    def jump_if_true(self):
+        if self.p_modal(1) != 0:
+            self.pc = self.p_modal(2)
         else:
             self.pc += 3
 
-    def op_jump_if_false(self, op):
-        if self.param1(op) == 0:
-            self.pc = self.param2(op)
+    def jump_if_false(self):
+        if self.p_modal(1) == 0:
+            self.pc = self.p_modal(2)
         else:
             self.pc += 3
 
-    def op_less_than(self, op):
-        if self.param1(op) < self.param2(op):
-            self.memory[self.param3Immediate()] = 1
+    def less_than(self):
+        if self.p_modal(1) < self.p_modal(2):
+            self.memory[self.p_immediate(3)] = 1
         else:
-            self.memory[self.param3Immediate()] = 0
+            self.memory[self.p_immediate(3)] = 0
         self.pc += 4
 
-    def op_equals(self, op):
-        if self.param1(op) == self.param2(op):
-            self.memory[self.param3Immediate()] = 1
+    def equals(self):
+        if self.p_modal(1) == self.p_modal(2):
+            self.memory[self.p_immediate(3)] = 1
         else:
-            self.memory[self.param3Immediate()] = 0
+            self.memory[self.p_immediate(3)] = 0
         self.pc += 4
 
     def run(self):
@@ -85,28 +74,28 @@ class Program:
             else:
                 raise RuntimeError('Awaiting input')
         while True:
-            op = self.operation()
-            if op[0] == 99:
+            op = self.op()
+            if op == 99:
                 self.halted = True
                 break
-            elif op[0] == 1:  # add
-                self.op_add(op)
-            elif op[0] == 2:  # mul
-                self.op_mul(op)
-            elif op[0] == 3:  # input
-                self.op_input(op)
+            elif op == 1:  # add
+                self.add()
+            elif op == 2:  # mul
+                self.mul()
+            elif op == 3:  # input
+                self.read()
                 if self.awaitingInput:
                     return
-            elif op[0] == 4:  # output
-                self.op_output(op)
-            elif op[0] == 5:  # jump-if-true
-                self.op_jump_if_true(op)
-            elif op[0] == 6:  # jump-if-false
-                self.op_jump_if_false(op)
-            elif op[0] == 7:  # less-than
-                self.op_less_than(op)
-            elif op[0] == 8:  # equals
-                self.op_equals(op)
+            elif op == 4:  # output
+                self.write()
+            elif op == 5:  # jump-if-true
+                self.jump_if_true()
+            elif op == 6:  # jump-if-false
+                self.jump_if_false()
+            elif op == 7:  # less-than
+                self.less_than()
+            elif op == 8:  # equals
+                self.equals()
             else:
                 raise RuntimeError("Unknown opcode")
 
@@ -155,7 +144,6 @@ def read(filename):
 
 
 def main(filename):
-    #  print(runGivenPhases(read(filename), [9, 8, 7, 6, 5]))
     print(solve(read(filename)))
 
 
