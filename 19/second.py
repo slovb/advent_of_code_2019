@@ -26,8 +26,8 @@ def solve(memory):
     while True:
         while not isTractor(memory, left, y):
             left += 1
-        if isTractor(memory, left + 100, y - 100):
-            return left * 10000 + y - 100
+        if isTractor(memory, left + 99, y - 99):
+            return left * 10000 + y - 99
         y += 1
 
 
